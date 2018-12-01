@@ -55,6 +55,7 @@ static int EquilibriumTest = FALSE;
 static int RehashTest = FALSE;
 static int Trials = 50000;
 static int Seed = 1543343734;
+static int unitNumber = 0;
 
 /* prototypes for functions in this file only */
 void getCommandLine(int argc, char **argv);
@@ -83,7 +84,6 @@ int main(int argc, char **argv)
     srand48(Seed);
 
     /* ----- small table tests  ----- */
-
     if (RehashTest)                         /* enable with -b */
         RehashDriver(TableSize);
 
@@ -94,6 +94,21 @@ int main(int argc, char **argv)
     /* test for performance in equilibrium */
     if (EquilibriumTest)                   /* enable with -e flag */
         equilibriumDriver();
+
+    if (unitNumber == 1){
+        table_t *T = table_construct(TableSize, ProbeDec);
+        data_t ptr = malloc(sizeof(int));
+        table_insert(T, 14, ptr);
+
+        ptr = malloc(sizeof(int));
+        table_insert(T, 15, ptr);
+
+        ptr = malloc(sizeof(int)); // inserting a key thats already inserted
+        table_insert(T, 14, ptr);
+
+        table_debug_print(T);
+        table_destruct(T);
+    }
 
     return 0;
 }
@@ -869,7 +884,7 @@ void getCommandLine(int argc, char **argv)
     int c;
     int index;
 
-    while ((c = getopt(argc, argv, "m:a:h:i:t:s:erbv")) != -1)
+    while ((c = getopt(argc, argv, "m:a:h:i:t:s:u:erbv")) != -1)
         switch(c) {
             case 'm': TableSize = atoi(optarg);      break;
             case 'a': LoadFactor = atof(optarg);     break;
@@ -879,6 +894,7 @@ void getCommandLine(int argc, char **argv)
             case 'e': EquilibriumTest = TRUE;        break;
             case 'r': RetrieveTest = TRUE;           break;
             case 'b': RehashTest = TRUE;             break;
+            case 'u': unitNumber = atoi(optarg);     break;
             case 'h':
                       if (strcmp(optarg, "linear") == 0)
                           ProbeDec = LINEAR;
@@ -918,6 +934,7 @@ void getCommandLine(int argc, char **argv)
                       printf("  -m 11     table size\n");
                       printf("  -a 0.9    load factor\n");
                       printf("  -h linear|double|quad\n");
+                      printf("  -u        unit test number\n");
                       printf("            Type of probing decrement\n");
                       printf("  -r        run retrieve test driver \n");
                       printf("  -b        run basic test driver \n");

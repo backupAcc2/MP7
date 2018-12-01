@@ -85,7 +85,14 @@
   * returns the number of table entries marked as deleted
   */
  int table_deletekeys(table_t *T){
+      int delete_count = 0;
+      for (int i = 0; i < T->table_size_M; i++)
+      {
+         if (T->data_arr[i].key == -1)
+            delete_count++;
+      }
 
+      return delete_count;
  }
 
 
@@ -112,17 +119,21 @@
       else
           probe_decrement = 1;
 
-      while(T->data_arr[i].key != 0)
+ // -1 represents a space that was previously deleted and can be filled in
+ // 0 represents an empty spot
+      while(T->data_arr[i].key > 0)
       {
+          if (T->data_arr[i].key == K) // the key is already inserted
+          {
+            free(T->data_arr[i].data_ptr);
+            T->data_arr[i].data_ptr = I;
+            return 1;
+          }
+
           i -= probe_decrement;
           if (i < 0)
               i += T->table_size_M;
 
-          if (T->data_arr[i].key == K)
-          {
-              T->data_arr[i].data_ptr = I;
-              return 1;
-          }
           num_probes++;
       }
 
@@ -149,8 +160,39 @@
   */
  data_t table_delete(table_t *T, hashkey_t K){
 
- }
+    int i = K % T->table_size_M;
+    int probe_decrement = T->type_of_probing_used_for_this_table;
+    int num_probes = 1;
 
+    // set probe_decrement to increment by the correct value
+      if (probe_decrement == 2)
+          probe_decrement = 4;
+      else if (probe_decrement == 1)
+          probe_decrement = 2;
+      else
+          probe_decrement = 1;
+
+    hashkey_t probe_key = T->data_arr[i].key;
+
+    while (probe_key != K && probe_key != 0)
+    {
+        i -= probe_decrement;
+        num_probes++;
+        if (i < 0)
+            i += T->table_size_M;
+        probe_key = T->data_arr[i].key;
+    }
+
+    T->num_probes_for_most_recent_call = num_probes;
+    if (probe_key == 0)
+        return NULL;
+
+
+    data_t temp = T->data_arr[i].data_ptr;
+    T->data_arr[i].key = -1;
+    return temp;
+
+ }
 
 
  /*****************************************************************************
@@ -170,7 +212,7 @@
         else if (probe_decrement == 1)
             probe_decrement = 2;
         else
-            probe_decrement = 1; 
+            probe_decrement = 1;
 
       hashkey_t probe_key = T->data_arr[i].key;
 
@@ -186,7 +228,7 @@
 
       T->num_probes_for_most_recent_call = num_probes;
       // Determine if success of failure
-      if (probe_key == 0)
+      if (probe_key <= 0)
           return NULL;
 
       return T->data_arr[i].data_ptr;
@@ -201,6 +243,12 @@
   */
  void table_destruct(table_t *T){
 
+    for (int i = 0; i < T->table_size_M; i++)
+    {
+       free(T->data_arr[i].data_ptr);
+    }
+    free(T->data_arr);
+    free(T);
  }
 
 
