@@ -3,8 +3,9 @@
  * ECE 2230, Fall 2018
  */
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
 
 /* constants used to indicate type of probing.  */
 enum ProbeDec_t {LINEAR, DOUBLE, QUAD};

@@ -55,6 +55,32 @@
   */
  table_t *table_rehash(table_t *T, int new_table_size){
 
+     int i;
+     data_t ptr;
+     hashkey_t key;
+     int old_table_size = T->table_size_M;
+     int probe_type = T->type_of_probing_used_for_this_table;
+     int num_probes = T->num_probes_for_most_recent_call;
+     int num_keys = T->num_keys_stored_in_table;
+
+     table_t *new_table = table_construct(new_table_size, probe_type);
+
+      for (i = 0; i < old_table_size; i++)
+      {
+        if (T->data_arr[i].data_ptr)
+        {
+          key = T->data_arr[i].key;
+          ptr = table_delete(T, T->data_arr[i].key);
+          table_insert(new_table, key, ptr);
+        }
+      }
+
+      table_destruct(T);
+
+
+      new_table->num_keys_stored_in_table = num_keys;
+      new_table->num_probes_for_most_recent_call = num_probes;
+      return new_table;
  }
 
 
@@ -189,6 +215,7 @@
 
 
     data_t temp = T->data_arr[i].data_ptr;
+    T->data_arr[i].data_ptr = NULL;
     T->data_arr[i].key = -1;
     return temp;
 
@@ -272,6 +299,12 @@
   *       assert(0 <= index && index < table_size);
   */
  hashkey_t table_peek(table_t *T, int index){
+
+    assert(0 <= index && index < T->table_size_M);
+    if (T->data_arr[index].data_ptr)
+        return T->data_arr[index].key;
+
+    return 0;
 
  }
 
