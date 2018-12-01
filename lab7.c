@@ -1,5 +1,5 @@
-/* lab7.c 
- * Lab7: Hash Tables 
+/* lab7.c
+ * Lab7: Hash Tables
  * ECE 2230, Fall 2018
  *
  * This file contains drivers to test the Hash Table ADT package.
@@ -10,9 +10,9 @@
  *
  * The -r driver builds a table using table_insert and then accesses
  * keys in the table using table_retrieve.  Use
- *   -r run the retrieve driver and specifiy the type of initial table keys 
+ *   -r run the retrieve driver and specifiy the type of initial table keys
  *      (rand|seq|fold|worst)
- *   -t to set the number of access trials 
+ *   -t to set the number of access trials
  *
  * Another test driver tests random inserts and deletes.  This driver builds
  * an initial table with random keys, and then performs insertions and deletions
@@ -67,6 +67,7 @@ int build_fold(table_t *T, int, int);
 int build_worst(table_t *T, int, int);
 void performanceFormulas(double);
 int find_first_prime(int number);
+void myTestDriver(void);
 
 int main(int argc, char **argv)
 {
@@ -97,6 +98,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
+
 void build_table(table_t *test_table, int num_keys)
 {
     int probes = -1;
@@ -117,7 +119,7 @@ void build_table(table_t *test_table, int num_keys)
         printf("invalid option for table type\n");
         exit(7);
     }
-    printf("    The average number of probes for a successful search = %g\n", 
+    printf("    The average number of probes for a successful search = %g\n",
             (double) probes/num_keys);
 
     if (Verbose)
@@ -127,7 +129,7 @@ void build_table(table_t *test_table, int num_keys)
     assert(size == num_keys);
 }
 
-/* driver to test small tables.  This is a series of 
+/* driver to test small tables.  This is a series of
  * simple tests and is not exhaustive.
  *
  * input: test_M is the table size for this test run
@@ -143,7 +145,7 @@ void RehashDriver(int test_M)
     assert(test_M > 5);  // tests designed for size at least 6
 
     H = table_construct(test_M, ProbeDec);
-    // fill table sequentially 
+    // fill table sequentially
     for (i = 0; i < test_M-1; i++) {
         ip = (int *) malloc(sizeof(int));
         *ip = 10*i;
@@ -202,7 +204,7 @@ void RehashDriver(int test_M)
     ip = table_retrieve(H, startkey+1);  // check key is not there
     assert(ip == NULL);
     assert(table_stats(H) >= 2);
-    // attempt to delete keys not in table 
+    // attempt to delete keys not in table
     assert(NULL == table_delete(H, startkey+1));
     assert(NULL == table_delete(H, startkey+test_M-1));
     // insert key in its place
@@ -244,7 +246,7 @@ void RehashDriver(int test_M)
     assert(*(int *)ip == 0);
     free(ip); ip = NULL;
     assert(table_entries(H) == 4);
-    ip = (int *) malloc(sizeof(int));  // replace 
+    ip = (int *) malloc(sizeof(int));  // replace
     *ip = 87;
     assert(1 == table_insert(H, startkey+10*test_M, ip));
     ip = NULL;
@@ -338,7 +340,7 @@ void RehashDriver(int test_M)
         printf("\nafter larger table filled\n");
         table_debug_print(H);
     }
-    // verify new items are found 
+    // verify new items are found
     for (i = 0; i < new_items; i++) {
         ip = table_retrieve(H, base_addr+i*test_M);
         assert(*(int *)ip == 10*i);
@@ -350,7 +352,7 @@ void RehashDriver(int test_M)
     printf("----- Passed rehash driver -----\n\n");
 }
 
-/* driver to build and test tables. Note this driver  
+/* driver to build and test tables. Note this driver
  * does not delete keys from the table.
  */
 void RetrieveDriver()
@@ -386,24 +388,24 @@ void RetrieveDriver()
                 unsuc_search += table_stats(test_table);
                 unsuc_trials++;
                 if (Verbose)
-                    printf("\t not found with %d probes\n", 
+                    printf("\t not found with %d probes\n",
                             table_stats(test_table));
             } else {
                 // this should be very rare
                 suc_search += table_stats(test_table);
                 suc_trials++;
                 if (Verbose)
-                    printf("\t\t FOUND with %d probes (this is rare!)\n", 
+                    printf("\t\t FOUND with %d probes (this is rare!)\n",
                             table_stats(test_table));
                 assert(*(int *)dp == key);
             }
         }
         assert(num_keys == table_entries(test_table));
         if (suc_trials > 0)
-            printf("    Avg probes for successful search = %g measured with %d trials\n", 
+            printf("    Avg probes for successful search = %g measured with %d trials\n",
                     (double) suc_search/suc_trials, suc_trials);
         if (unsuc_trials > 0)
-            printf("    Avg probes for unsuccessful search = %g measured with %d trials\n", 
+            printf("    Avg probes for unsuccessful search = %g measured with %d trials\n",
                     (double) unsuc_search/unsuc_trials, unsuc_trials);
     }
 
@@ -513,9 +515,9 @@ void equilibriumDriver(void)
     assert(size == table_entries(test_table));
     printf("  After exercise, time=%g \n",
             1000*((double)(end-start))/CLOCKS_PER_SEC);
-    printf("  successful searches during exercise=%g, trials=%d\n", 
+    printf("  successful searches during exercise=%g, trials=%d\n",
             (double) suc_search/suc_trials, suc_trials);
-    printf("  unsuccessful searches during exercise=%g, trials=%d\n", 
+    printf("  unsuccessful searches during exercise=%g, trials=%d\n",
             (double) unsuc_search/unsuc_trials, unsuc_trials);
 
 
@@ -530,7 +532,7 @@ void equilibriumDriver(void)
             assert(MINID <= key && key <= MAXID);
             dp = table_retrieve(test_table, key);
             if (dp == NULL) {
-                printf("Failed to find key (%u) but it is in location (%d)\n", 
+                printf("Failed to find key (%u) but it is in location (%d)\n",
                         key, i);
                 exit(16);
             } else {
@@ -561,10 +563,10 @@ void equilibriumDriver(void)
             (double) 100.0 * table_deletekeys(test_table)
             / (TableSize - table_entries(test_table)));
 
-    printf("   Measured avg probes for successful search=%g, trials=%d\n", 
+    printf("   Measured avg probes for successful search=%g, trials=%d\n",
             (double) suc_search/suc_trials, suc_trials);
 
-    printf("   Measured avg probes for unsuccessful search=%g, trials=%d\n", 
+    printf("   Measured avg probes for unsuccessful search=%g, trials=%d\n",
             (double) unsuc_search/unsuc_trials, unsuc_trials);
     printf("    Do deletions increase avg number of probes?\n");
     performanceFormulas((double) size/TableSize);
@@ -588,7 +590,7 @@ void equilibriumDriver(void)
             assert(MINID <= key && key <= MAXID);
             dp = table_retrieve(test_table, key);
             if (dp == NULL) {
-                printf("Failed to find key (%u) after rehash but it is in location (%d)\n", 
+                printf("Failed to find key (%u) after rehash but it is in location (%d)\n",
                         key, i);
                 exit(26);
             } else {
@@ -614,10 +616,10 @@ void equilibriumDriver(void)
     size = table_entries(test_table);
     printf("  After rehash, time=%g\n",
             1000*((double)(end-start))/CLOCKS_PER_SEC);
-    printf("   Measured avg probes for successful search=%g, trials=%d\n", 
+    printf("   Measured avg probes for successful search=%g, trials=%d\n",
             (double) suc_search/suc_trials, suc_trials);
 
-    printf("   Measured avg probes for unsuccessful search=%g, trials=%d\n", 
+    printf("   Measured avg probes for unsuccessful search=%g, trials=%d\n",
             (double) unsuc_search/unsuc_trials, unsuc_trials);
 
     /* remove and free all items from table */
@@ -627,7 +629,7 @@ void equilibriumDriver(void)
 }
 
 /* build a table with random keys.  The keys are generated with a uniform
- * distribution.  
+ * distribution.
  */
 int build_random(table_t *T, int table_size, int num_addr)
 {
@@ -860,8 +862,8 @@ void performanceFormulas(double load_factor)
 void getCommandLine(int argc, char **argv)
 {
     /* optopt--if an unknown option character is found
-     * optind--index of next element in argv 
-     * optarg--argument for option that requires argument 
+     * optind--index of next element in argv
+     * optarg--argument for option that requires argument
      * "x:" colon after x means argument required
      */
     int c;
