@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define FALSE 0
+#define TRUE 1
+
 /* constants used to indicate type of probing.  */
 enum ProbeDec_t {LINEAR, DOUBLE, QUAD};
 

@@ -98,28 +98,35 @@ int main(int argc, char **argv)
     if (unitNumber == 1){
         table_t *T = table_construct(TableSize, ProbeDec);
         data_t ptr = malloc(sizeof(int));
+        data_t ptr2;
         table_insert(T, 14, ptr);
 
         ptr = malloc(sizeof(int));
         table_insert(T, 15, ptr);
 
-        ptr = malloc(sizeof(int)); // inserting a key thats already inserted
-        table_insert(T, 14, ptr);
+        ptr2 = malloc(sizeof(int)); // inserting a key thats already inserted
+        table_insert(T, 14, ptr2);
+
+      // try to delete a key thats not inserted
+        table_delete(T, 25);
+
+        assert(table_delete(T, 14) == ptr2);
 
         table_debug_print(T);
         table_destruct(T);
     }
 
     if (unitNumber == 2){
+      // test rehash
+
         table_t *T = table_construct(TableSize, ProbeDec);
         data_t ptr;
         double checkLoad = 0.0;
-        int size = TableSize;
 
-        for (int i = 1; i < size; i++)
+        for (int i = 11; i < TableSize+6; i++)
         {
           ptr = malloc(sizeof(int));
-          table_insert(T, i*2, ptr);
+          table_insert(T, i, ptr);
           checkLoad = (double)T->num_keys_stored_in_table / T->table_size_M;
           if (checkLoad > LoadFactor)
               T = table_rehash(T, T->table_size_M * 2);

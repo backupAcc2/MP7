@@ -70,14 +70,14 @@
         if (T->data_arr[i].data_ptr)
         {
           key = T->data_arr[i].key;
-          ptr = table_delete(T, T->data_arr[i].key);
+        //  don't free the data pointers because we are still using them
+          ptr = T->data_arr[i].data_ptr;
           table_insert(new_table, key, ptr);
         }
       }
 
-      table_destruct(T);
-
-
+      free(T->data_arr);
+      free(T);
       new_table->num_keys_stored_in_table = num_keys;
       new_table->num_probes_for_most_recent_call = num_probes;
       return new_table;
@@ -114,7 +114,7 @@
       int delete_count = 0;
       for (int i = 0; i < T->table_size_M; i++)
       {
-         if (T->data_arr[i].key == -1)
+         if (T->data_arr[i].key == 1)
             delete_count++;
       }
 
@@ -136,6 +136,7 @@
       int i = K % T->table_size_M;
       int probe_decrement = T->type_of_probing_used_for_this_table;
       int num_probes = 1;
+      int already_inserted = FALSE;
 
     // set probe_decrement to increment by the correct value
       if (probe_decrement == 2)
@@ -145,31 +146,41 @@
       else
           probe_decrement = 1;
 
- // -1 represents a space that was previously deleted and can be filled in
- // 0 represents an empty spot
-      while(T->data_arr[i].key > 0)
+
+      if(table_retrieve(T,K)) { already_inserted = TRUE; }
+
+      if (table_full(T) && !already_inserted) { return -1; }
+
+      if (!already_inserted)
       {
-          if (T->data_arr[i].key == K) // the key is already inserted
-          {
-            free(T->data_arr[i].data_ptr);
-            T->data_arr[i].data_ptr = I;
-            return 1;
-          }
-
-          i -= probe_decrement;
-          if (i < 0)
-              i += T->table_size_M;
-
+        while(T->data_arr[i].key > 0)
+        {
           num_probes++;
-      }
+          i -= probe_decrement;
+          if (i < 0) { i += T->table_size_M; }
+        }
+      } // closes if (!already_inserted)
 
-      if (T->num_keys_stored_in_table == T->table_size_M - 1)
-          return -1;
+        else // the key is already inserted
+        {
+           while(T->data_arr[i].key != K)
+           {
+             i -= probe_decrement;
+             num_probes++;
+             if (i < 0) { i += T->table_size_M; }
+           }
 
+           free(T->data_arr[i].data_ptr);
+           T->data_arr[i].data_ptr = I;
+           T->num_probes_for_most_recent_call = num_probes;
+           return 1;
+        }
+
+      T->num_probes_for_most_recent_call = num_probes;
       T->data_arr[i].key = K;
       T->data_arr[i].data_ptr = I;
       T->num_keys_stored_in_table++;
-      T->num_probes_for_most_recent_call = num_probes;
+
       return 0;
  }
 
@@ -215,8 +226,10 @@
 
 
     data_t temp = T->data_arr[i].data_ptr;
+    free(T->data_arr[i].data_ptr);
     T->data_arr[i].data_ptr = NULL;
-    T->data_arr[i].key = -1;
+    T->data_arr[i].key = 1;
+    T->num_keys_stored_in_table--;
     return temp;
 
  }
@@ -243,19 +256,17 @@
 
       hashkey_t probe_key = T->data_arr[i].key;
 
-      while ((probe_key != K) && (probe_key != 0))
+      while ((probe_key != K) && (probe_key > 0))
       {
         i -= probe_decrement;
         num_probes++;
-        if (i < 0)
-            i += T->table_size_M;
+        if (i < 0) { i += T->table_size_M; }
         probe_key = T->data_arr[i].key;
       }
 
-
       T->num_probes_for_most_recent_call = num_probes;
       // Determine if success of failure
-      if (probe_key <= 0)
+      if (probe_key <= 1)
           return NULL;
 
       return T->data_arr[i].data_ptr;
@@ -272,8 +283,10 @@
 
     for (int i = 0; i < T->table_size_M; i++)
     {
-       free(T->data_arr[i].data_ptr);
+      if (T->data_arr[i].data_ptr)
+       {  free(T->data_arr[i].data_ptr); }
     }
+
     free(T->data_arr);
     free(T);
  }
