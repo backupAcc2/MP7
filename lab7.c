@@ -135,6 +135,26 @@ int main(int argc, char **argv)
         table_destruct(T);
     }
 
+    if (unitNumber == 3)
+    {
+        table_t *T = table_construct(TableSize, ProbeDec);
+        data_t ptr;
+
+        // completely fill the table
+        for (int i = 10; i < TableSize+10; i++)
+        {
+          ptr = malloc(sizeof(int));
+          if (table_insert(T, i, ptr) == -1) { free(ptr); }
+        }
+
+        ptr = table_delete(T, 12);
+        ptr = malloc(sizeof(int));
+        table_insert(T, 20, ptr);
+
+        table_debug_print(T);
+        table_destruct(T);
+    }
+
     return 0;
 }
 

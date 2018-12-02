@@ -151,6 +151,25 @@
 
       if (table_full(T) && !already_inserted) { return -1; }
 
+      if (table_deletekeys(T) + T->num_keys_stored_in_table == T->table_size_M -1 && !already_inserted)
+      {
+        // we need to keep an empty key, so enter at the 1 value
+        while(T->data_arr[i].key != 1)
+        {
+          i -= probe_decrement;
+          num_probes++;
+          if (i < 0) { i += T->table_size_M; }
+        }
+        T->num_probes_for_most_recent_call = num_probes;
+        T->data_arr[i].key = K;
+        T->data_arr[i].data_ptr = I;
+        T->num_keys_stored_in_table++;
+
+        return 0;
+      }
+
+      
+
       if (!already_inserted)
       {
         while(T->data_arr[i].key > 0)
