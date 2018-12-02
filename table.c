@@ -168,7 +168,7 @@
         return 0;
       }
 
-      
+
 
       if (!already_inserted)
       {
@@ -245,7 +245,7 @@
 
 
     data_t temp = T->data_arr[i].data_ptr;
-    free(T->data_arr[i].data_ptr);
+  //  free(T->data_arr[i].data_ptr);
     T->data_arr[i].data_ptr = NULL;
     T->data_arr[i].key = 1;
     T->num_keys_stored_in_table--;
@@ -264,6 +264,9 @@
       int i = K % T->table_size_M;
       int probe_decrement = T->type_of_probing_used_for_this_table;
       int num_probes = 1;
+      int deletes = table_deletekeys(T);
+      int num_keys = T->num_keys_stored_in_table;
+      int delete_count = 0;
 
       // set probe_decrement to increment by the correct value
         if (probe_decrement == 2)
@@ -275,13 +278,33 @@
 
       hashkey_t probe_key = T->data_arr[i].key;
 
-      while ((probe_key != K) && (probe_key > 0))
+      if (deletes + num_keys == T->table_size_M -1 && deletes > 0)
       {
-        i -= probe_decrement;
-        num_probes++;
-        if (i < 0) { i += T->table_size_M; }
-        probe_key = T->data_arr[i].key;
+          while (delete_count < deletes && probe_key != K)
+          {
+            i -= probe_decrement;
+            num_probes++;
+            if (i < 0) { i += T->table_size_M; }
+            probe_key = T->data_arr[i].key;
+            if (probe_key == 1) { delete_count++; }
+          }
+        T->num_probes_for_most_recent_call = num_probes;
+        if (probe_key == K)
+          return T->data_arr[i].data_ptr;
+        else
+           return NULL;
       }
+
+    else
+    {
+      while ((probe_key != K) && (probe_key != 0))
+      {
+          i -= probe_decrement;
+          num_probes++;
+          if (i < 0) { i += T->table_size_M; }
+          probe_key = T->data_arr[i].key;
+      }
+    }
 
       T->num_probes_for_most_recent_call = num_probes;
       // Determine if success of failure
