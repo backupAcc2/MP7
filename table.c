@@ -151,10 +151,9 @@
 
       if (table_full(T) && !already_inserted) { return -1; }
 
-      if (table_deletekeys(T) + T->num_keys_stored_in_table == T->table_size_M -1 && !already_inserted)
+      if (table_deletekeys(T) + T->num_keys_stored_in_table >= T->table_size_M -1 && !already_inserted)
       {
-        // we need to keep an empty key, so enter at the 1 value
-        while(T->data_arr[i].key != 1)
+        while(T->data_arr[i].key > 1)
         {
           i -= probe_decrement;
           num_probes++;
@@ -167,8 +166,6 @@
 
         return 0;
       }
-
-
 
       if (!already_inserted)
       {
@@ -278,7 +275,7 @@
 
       hashkey_t probe_key = T->data_arr[i].key;
 
-      if (deletes + num_keys == T->table_size_M -1 && deletes > 0)
+      if (deletes + num_keys >= T->table_size_M -1 && deletes > 0)
       {
           while (delete_count < deletes && probe_key != K)
           {
