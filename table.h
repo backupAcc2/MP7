@@ -44,4 +44,4 @@ int table_stats(table_t *);
 hashkey_t table_peek(table_t *T, int index);
 void table_debug_print(table_t *T);
 
-void set_increment(table_t *, hashkey_t K, int loop_count, int *increment, int *i);
+void set_increment(table_t *, hashkey_t K, int loop_count, int *i);

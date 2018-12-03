@@ -155,6 +155,24 @@ int main(int argc, char **argv)
         table_destruct(T);
     }
 
+    if (unitNumber == 4)
+    {
+      table_t *T = table_construct(TableSize, ProbeDec);
+      data_t ptr;
+      ptr = malloc(sizeof(int));
+      table_insert(T, 6, ptr);
+      // insert items at same index
+      table_insert(T, 14, ptr);
+      table_insert(T, 22, ptr);
+      table_insert(T, 30, ptr);
+      table_insert(T, 38, ptr);
+      table_insert(T, 46, ptr);
+
+      table_debug_print(T);
+      table_destruct(T);
+
+    }
+
     return 0;
 }
 
@@ -591,11 +609,6 @@ void equilibriumDriver(void)
         if (key != 0) {
             assert(MINID <= key && key <= MAXID);
             dp = table_retrieve(test_table, key);
-
-
-      //      assert(table_retrieve(test_table, key));
-
-
             if (dp == NULL) {
                 printf("Failed to find key (%u) but it is in location (%d)\n",
                         key, i);

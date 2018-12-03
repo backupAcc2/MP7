@@ -137,7 +137,6 @@
       int M = T->table_size_M;
       int num_probes = 1;
       int already_inserted = FALSE;
-      int probe_increment = 0;
 
       if(table_retrieve(T,K)) { already_inserted = TRUE; }
 
@@ -149,7 +148,7 @@
       {
         while(T->data_arr[i].key > 1)
         {
-          set_increment(T, K, num_probes, &probe_increment, &i);
+          set_increment(T, K, num_probes, &i);
           num_probes++;
           while (i < 0) { i += T->table_size_M; }
         }
@@ -167,7 +166,7 @@
       {
         while(T->data_arr[i].key > 0)
         {
-          set_increment(T, K, num_probes, &probe_increment, &i);
+          set_increment(T, K, num_probes, &i);
           num_probes++;
           while (i < 0) { i += T->table_size_M; }
         }
@@ -187,7 +186,7 @@
       {
         while(T->data_arr[i].key != K)
           {
-             set_increment(T, K, num_probes, &probe_increment, &i);
+             set_increment(T, K, num_probes, &i);
              num_probes++;
              while (i < 0) { i += T->table_size_M; }
           }
@@ -215,13 +214,12 @@
 
     int i = K % T->table_size_M;
     int num_probes = 1;
-    int probe_increment = 0;
 
     hashkey_t probe_key = T->data_arr[i].key;
 
     while (probe_key != K && probe_key != 0)
     {
-      set_increment(T, K, num_probes, &probe_increment, &i);
+      set_increment(T, K, num_probes, &i);
       num_probes++;
       while (i < 0) { i += T->table_size_M; }
       probe_key = T->data_arr[i].key;
@@ -254,7 +252,6 @@
       int deletes = table_deletekeys(T);
       int num_keys = T->num_keys_stored_in_table;
       int delete_count = 0;
-      int probe_increment = 0;
 
       hashkey_t probe_key = T->data_arr[i].key;
 
@@ -262,9 +259,9 @@
       // holds a value or has been deleted (marked with 1)
       if (deletes + num_keys >= T->table_size_M -1 && deletes > 0)
       {
-          while (delete_count < deletes && probe_key != K)
+          while (delete_count <= deletes && probe_key != K)
           {
-            set_increment(T, K, num_probes, &probe_increment, &i);
+            set_increment(T, K, num_probes, &i);
             num_probes++;
             while (i < 0) { i += T->table_size_M; }
             probe_key = T->data_arr[i].key;
@@ -282,7 +279,7 @@
       {
         while (probe_key != K && probe_key != 0)
         {
-          set_increment(T, K, num_probes, &probe_increment, &i);
+          set_increment(T, K, num_probes, &i);
           num_probes++;
           while (i < 0) { i += T->table_size_M; }
           probe_key = T->data_arr[i].key;
@@ -366,15 +363,15 @@
  * sets the proper increment depending on our probing type for the table
  * the values of increment and i will change
  */
- void set_increment(table_t *T, hashkey_t K, int loop_count, int *increment, int *i){
+ void set_increment(table_t *T, hashkey_t K, int loop_count, int *i){
 
    int probe_type = T->type_of_probing_used_for_this_table;
    int M = T->table_size_M;
 
    if (probe_type == 2)
    {
-     *increment += loop_count;
-     *i -= *increment;
+     *i -= loop_count;
+  //   printf("increment by %d\n", *increment);
    }
    else if (probe_type == 1)
    {
