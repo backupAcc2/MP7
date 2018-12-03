@@ -329,7 +329,7 @@
 
     else
     {
-      while ((probe_key != K) && (probe_key != 0))
+      while ((probe_key != K) && (probe_key != 0) && num_probes < M)
       {
         if (probe_type == 2)
         {
@@ -351,7 +351,7 @@
 
       T->num_probes_for_most_recent_call = num_probes;
       // Determine if success of failure
-      if (probe_key <= 1)
+      if (probe_key != K)
           return NULL;
 
       return T->data_arr[i].data_ptr;
