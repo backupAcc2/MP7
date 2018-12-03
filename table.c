@@ -135,7 +135,6 @@
 
       int i = K % T->table_size_M;
       int M = T->table_size_M;
-      int probe_type = T->type_of_probing_used_for_this_table;
       int num_probes = 1;
       int already_inserted = FALSE;
       int probe_increment = 0;
@@ -144,22 +143,13 @@
 
       if (table_full(T) && !already_inserted) { return -1; }
 
+ // case 1
+   // every key either holds an entry or has been deleted, cannot search for 0's
       if (table_deletekeys(T) + T->num_keys_stored_in_table >= M -1 && !already_inserted)
       {
         while(T->data_arr[i].key > 1)
         {
-          if (probe_type == 2)
-          {
-            probe_increment += num_probes;
-            i -= probe_increment;
-          }
-          else if (probe_type == 1)
-          {
-            i -= 1 > ((K/M) % M) ? 1 : (K/M) % M;
-          }
-          else
-            i -= 1;
-
+          set_increment(T, K, num_probes, &probe_increment, &i);
           num_probes++;
           while (i < 0) { i += T->table_size_M; }
         }
@@ -171,59 +161,43 @@
         return 0;
       }
 
-      if (!already_inserted)
+ // case 2
+   // insert at first empty key
+      else if (!already_inserted)
       {
         while(T->data_arr[i].key > 0)
         {
-          if (probe_type == 2)
-          {
-            probe_increment += num_probes;
-            i -= probe_increment;
-          }
-          else if (probe_type == 1)
-          {
-            i -= 1 > ((K/M) % M) ? 1 : (K/M) % M;
-          }
-          else
-            i -= 1;
-
+          set_increment(T, K, num_probes, &probe_increment, &i);
           num_probes++;
           while (i < 0) { i += T->table_size_M; }
         }
-      } // closes if (!already_inserted)
 
-        else // the key is already inserted
-        {
-           while(T->data_arr[i].key != K)
-           {
-             if (probe_type == 2)
-             {
-               probe_increment += num_probes;
-               i -= probe_increment;
-             }
-             else if (probe_type == 1)
-             {
-               i -= 1 > ((K/M) % M) ? 1 : (K/M) % M;
-             }
-             else
-               i -= 1;
+        T->num_probes_for_most_recent_call = num_probes;
+        T->data_arr[i].key = K;
+        T->data_arr[i].data_ptr = I;
+        T->num_keys_stored_in_table++;
 
+        return 0;
+      }
+
+
+ // case 3
+  // the key is already inserted, update the data_ptr
+      else
+      {
+        while(T->data_arr[i].key != K)
+          {
+             set_increment(T, K, num_probes, &probe_increment, &i);
              num_probes++;
              while (i < 0) { i += T->table_size_M; }
-           }
+          }
 
-           free(T->data_arr[i].data_ptr);
-           T->data_arr[i].data_ptr = I;
-           T->num_probes_for_most_recent_call = num_probes;
-           return 1;
-        }
+        free(T->data_arr[i].data_ptr);
+        T->data_arr[i].data_ptr = I;
+        T->num_probes_for_most_recent_call = num_probes;
+        return 1;
+      }
 
-      T->num_probes_for_most_recent_call = num_probes;
-      T->data_arr[i].key = K;
-      T->data_arr[i].data_ptr = I;
-      T->num_keys_stored_in_table++;
-
-      return 0;
  }
 
 
@@ -240,27 +214,14 @@
  data_t table_delete(table_t *T, hashkey_t K){
 
     int i = K % T->table_size_M;
-    int probe_type = T->type_of_probing_used_for_this_table;
     int num_probes = 1;
-    int M = T->table_size_M;
     int probe_increment = 0;
 
     hashkey_t probe_key = T->data_arr[i].key;
 
     while (probe_key != K && probe_key != 0)
     {
-      if (probe_type == 2)
-      {
-        probe_increment += num_probes;
-        i -= probe_increment;
-      }
-      else if (probe_type == 1)
-      {
-        i -= 1 > ((K/M) % M) ? 1 : (K/M) % M;
-      }
-      else
-        { i -= 1; }
-
+      set_increment(T, K, num_probes, &probe_increment, &i);
       num_probes++;
       while (i < 0) { i += T->table_size_M; }
       probe_key = T->data_arr[i].key;
@@ -269,7 +230,6 @@
     T->num_probes_for_most_recent_call = num_probes;
     if (probe_key == 0)
         return NULL;
-
 
     data_t temp = T->data_arr[i].data_ptr;
   //  free(T->data_arr[i].data_ptr);
@@ -288,66 +248,46 @@
   */
  data_t table_retrieve(table_t *T, hashkey_t K){
 
-      int i = K % T->table_size_M;
-      int probe_type = T->type_of_probing_used_for_this_table;
+      int M = T->table_size_M;
+      int i = K % M;
       int num_probes = 1;
       int deletes = table_deletekeys(T);
       int num_keys = T->num_keys_stored_in_table;
       int delete_count = 0;
-      int M = T->table_size_M;
       int probe_increment = 0;
 
       hashkey_t probe_key = T->data_arr[i].key;
 
+      // In this case there are no 0's left in the table, every key either
+      // holds a value or has been deleted (marked with 1)
       if (deletes + num_keys >= T->table_size_M -1 && deletes > 0)
       {
           while (delete_count < deletes && probe_key != K)
           {
-            if (probe_type == 2)
-            {
-              probe_increment += num_probes;
-              i -= probe_increment;
-            }
-            else if (probe_type == 1)
-            {
-              i -= 1 > ((K/M) % M) ? 1 : (K/M) % M;
-            }
-            else
-              i -= 1;
-
+            set_increment(T, K, num_probes, &probe_increment, &i);
             num_probes++;
             while (i < 0) { i += T->table_size_M; }
             probe_key = T->data_arr[i].key;
             if (probe_key == 1) { delete_count++; }
           }
+
         T->num_probes_for_most_recent_call = num_probes;
         if (probe_key == K)
-          return T->data_arr[i].data_ptr;
+           return T->data_arr[i].data_ptr;
         else
            return NULL;
       }
 
-    else
-    {
-      while ((probe_key != K) && (probe_key != 0) && num_probes < M)
+      else
       {
-        if (probe_type == 2)
+        while (probe_key != K && probe_key != 0)
         {
-          probe_increment += num_probes;
-          i -= probe_increment;
+          set_increment(T, K, num_probes, &probe_increment, &i);
+          num_probes++;
+          while (i < 0) { i += T->table_size_M; }
+          probe_key = T->data_arr[i].key;
         }
-        else if (probe_type == 1)
-        {
-          i -= 1 > ((K/M) % M) ? 1 : (K/M) % M;
-        }
-        else
-          i -= 1;
-
-        num_probes++;
-        while (i < 0) { i += T->table_size_M; }
-        probe_key = T->data_arr[i].key;
       }
-    }
 
       T->num_probes_for_most_recent_call = num_probes;
       // Determine if success of failure
@@ -420,3 +360,27 @@
       }
 
  }
+
+
+/******************************************************************************
+ * sets the proper increment depending on our probing type for the table
+ * the values of increment and i will change
+ */
+ void set_increment(table_t *T, hashkey_t K, int loop_count, int *increment, int *i){
+
+   int probe_type = T->type_of_probing_used_for_this_table;
+   int M = T->table_size_M;
+
+   if (probe_type == 2)
+   {
+     *increment += loop_count;
+     *i -= *increment;
+   }
+   else if (probe_type == 1)
+   {
+     *i -= 1 > ((K/M) % M) ? 1 : (K/M) % M;
+   }
+   else
+     *i -= 1;
+
+}

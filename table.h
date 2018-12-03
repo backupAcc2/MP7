@@ -41,17 +41,7 @@ data_t table_delete(table_t *, hashkey_t K);
 data_t table_retrieve(table_t *, hashkey_t K);
 void table_destruct(table_t *);
 int table_stats(table_t *);
-
-/* This function is for testing purposes only.  Given an index position into
- * the hash table return the value of the key if data is stored in this
- * index position.  If the index position does not contain data, then the
- * return value must be zero.  Make the first
- * lines of this function
- *       assert(0 <= index && index < table_size);
- */
 hashkey_t table_peek(table_t *T, int index);
-
-/* Print the table position and keys in a easily readable and compact format.
- * Only useful when the table is small.
- */
 void table_debug_print(table_t *T);
+
+void set_increment(table_t *, hashkey_t K, int loop_count, int *increment, int *i);

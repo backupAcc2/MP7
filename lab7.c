@@ -591,6 +591,11 @@ void equilibriumDriver(void)
         if (key != 0) {
             assert(MINID <= key && key <= MAXID);
             dp = table_retrieve(test_table, key);
+
+
+      //      assert(table_retrieve(test_table, key));
+
+
             if (dp == NULL) {
                 printf("Failed to find key (%u) but it is in location (%d)\n",
                         key, i);
