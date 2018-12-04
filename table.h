@@ -1,4 +1,4 @@
-/* table.h
+/* Heath Gerrald
  * Lab7: Hash Tables
  * ECE 2230, Fall 2018
  */

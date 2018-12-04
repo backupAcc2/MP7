@@ -164,7 +164,7 @@
    // insert at first empty key
       else if (!already_inserted)
       {
-        while(T->data_arr[i].key > 0)
+        while(T->data_arr[i].key > 1)
         {
           set_increment(T, K, num_probes, &i);
           num_probes++;

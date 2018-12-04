@@ -56,6 +56,8 @@ static int RehashTest = FALSE;
 static int Trials = 50000;
 static int Seed = 1543343734;
 static int unitNumber = 0;
+static int TestPlan = FALSE;
+static int runDeletion = FALSE;
 
 /* prototypes for functions in this file only */
 void getCommandLine(int argc, char **argv);
@@ -69,6 +71,7 @@ int build_worst(table_t *T, int, int);
 void performanceFormulas(double);
 int find_first_prime(int number);
 void myTestDriver(void);
+void deletionDriver(void);
 
 int main(int argc, char **argv)
 {
@@ -88,12 +91,26 @@ int main(int argc, char **argv)
         RehashDriver(TableSize);
 
     /* ----- large table tests  ----- */
-    if (RetrieveTest)                        /* enable with -r flag */
-        RetrieveDriver();
+    if (RetrieveTest) {
+      clock_t start, end;
+      double elapse_time; // time in milliseconds
+      start = clock();
+      RetrieveDriver();
+      end = clock();
+      elapse_time = 1000.0 * ((double) (end - start)) / CLOCKS_PER_SEC;
+      printf("elapse time: %lf\n", elapse_time);                     /* enable with -r flag */
+      }
 
     /* test for performance in equilibrium */
     if (EquilibriumTest)                   /* enable with -e flag */
         equilibriumDriver();
+
+    if (runDeletion)
+      { deletionDriver(); }
+
+    if (TestPlan)
+      { myTestDriver(); }
+
 
     if (unitNumber == 1){
         table_t *T = table_construct(TableSize, ProbeDec);
@@ -176,6 +193,105 @@ int main(int argc, char **argv)
     return 0;
 }
 
+
+void deletionDriver(void){
+
+   TableSize = 7;
+   ProbeDec = 0;
+   data_t ptr;
+   table_t *T = table_construct(TableSize, ProbeDec);
+
+   ptr = malloc(sizeof(int));
+   table_insert(T, 5, ptr);
+   table_insert(T, 12, ptr);
+   table_insert(T, 11, ptr);
+   table_insert(T, 19, ptr);
+   table_debug_print(T);
+   puts("");
+
+   table_delete(T, 5);
+   table_delete(T,8);
+   table_delete(T,12);
+   table_debug_print(T);
+   puts("");
+
+   table_insert(T, 19, ptr);
+   table_insert(T, 26, ptr);
+   table_debug_print(T);
+   puts("");
+
+   table_destruct(T);
+
+   puts("");
+   puts("Part 3 B");
+
+   table_t *H = table_construct(TableSize, ProbeDec);
+   data_t ptr2, ptr3;
+   ptr2 = malloc(sizeof(int));
+   ptr3 = malloc(sizeof(int));
+   table_insert(H, 7, ptr2);
+
+   table_insert(H, 8, ptr2);
+   table_insert(H, 9, ptr2);
+   table_insert(H, 10, ptr2);
+   table_insert(H, 11, ptr2);
+   table_insert(H, 12, ptr3);
+   table_debug_print(H);
+   puts("");
+
+   table_delete(H, 7);
+   table_delete(H, 8);
+   table_delete(H, 9);
+   table_delete(H, 10);
+   table_debug_print(H);
+   puts("");
+
+   ptr2 = malloc(sizeof(int));
+   table_insert(H, 13, ptr2);
+   table_insert(H, 14, ptr2);
+   table_retrieve(H, 16);
+
+   table_debug_print(H);
+   puts("");
+
+   table_destruct(H);
+
+}
+
+void myTestDriver(void){
+
+    table_t *T = table_construct(TableSize, ProbeDec);
+    data_t ptr, ptr2;
+    int i = 0;
+
+    for (i = 11; i < TableSize + 10; i++)
+    {
+      ptr = malloc(sizeof(int));
+      table_insert(T, i, ptr);
+    }
+//      table_debug_print(T);
+
+    // insert a key that is already present
+    ptr2 = malloc(sizeof(int));
+    table_insert(T, 20, ptr2);
+    assert(table_retrieve(T,20) == ptr2);
+
+    // delete a key that doesn't exist in the table
+    table_delete(T, 30);
+
+    // delete all of the keys from the table
+    for (i = 11; i < TableSize + 10; i++)
+    {
+      ptr = table_delete(T, i);
+      free(ptr);
+    }
+
+    // delete from a table with no entries
+    table_delete(T, 45);
+
+    table_debug_print(T);
+    table_destruct(T);
+}
 
 void build_table(table_t *test_table, int num_keys)
 {
@@ -947,12 +1063,14 @@ void getCommandLine(int argc, char **argv)
     int c;
     int index;
 
-    while ((c = getopt(argc, argv, "m:a:h:i:t:s:u:erbv")) != -1)
+    while ((c = getopt(argc, argv, "m:ya:h:i:ot:s:u:erbv")) != -1)
         switch(c) {
             case 'm': TableSize = atoi(optarg);      break;
+            case 'y': TestPlan = TRUE;               break;
             case 'a': LoadFactor = atof(optarg);     break;
             case 's': Seed = atoi(optarg);           break;
             case 't': Trials = atoi(optarg);         break;
+            case 'o': runDeletion = TRUE;            break;
             case 'v': Verbose = TRUE;                break;
             case 'e': EquilibriumTest = TRUE;        break;
             case 'r': RetrieveTest = TRUE;           break;
@@ -995,7 +1113,9 @@ void getCommandLine(int argc, char **argv)
                       printf("Lab7 command line options\n");
                       printf("General options ---------\n");
                       printf("  -m 11     table size\n");
+                      printf("  -y        run my test plan driver\n");
                       printf("  -a 0.9    load factor\n");
+                      printf("  -o        run my deletion driver\n");
                       printf("  -h linear|double|quad\n");
                       printf("  -u        unit test number\n");
                       printf("            Type of probing decrement\n");
